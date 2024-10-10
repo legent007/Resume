@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Paragraphs with Specific Words in Text File</title>
+</head>
+<body>
+    <h2>Find Paragraphs Containing Specific Words</h2>
+    
+    <input type="file" id="fileInput" accept=".txt" />
+    <button onclick="findParagraphsInFile()">Find Paragraphs</button>
+    
+    <pre id="output"></pre>
+
+    <script>
+        function findParagraphsInFile() {
+            const fileInput = document.getElementById('fileInput');
+            const output = document.getElementById('output');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                output.textContent = "Please select a text file.";
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                
+                // Split the content into paragraphs based on pattern
+                const paragraphs = text.split(/(?=Request Url :)/g);
+
+                // Clear previous output
+                output.textContent = '';
+
+                let foundParagraphs = [];
+
+                // Search for paragraphs containing 'api/RFID' and '"success":true'
+                paragraphs.forEach(paragraph => {
+                    if (paragraph.includes(':apiLaundryWorkStationAPIScanINOUT_NonRFID') && paragraph.includes('"IsWeight":false')) {
+                        foundParagraphs.push(paragraph);
+                    }
+                });
+
+                // Display results
+                if (foundParagraphs.length > 0) {
+                    foundParagraphs.forEach((paragraph, index) => {
+                        output.textContent += `--- Matching Paragraph ${index + 1} ---\n${paragraph}\n\n`;
+                    });
+                } else {
+                    output.textContent = "No paragraph contains both ':apiLaundryWorkStationAPIScanINOUT_NonRFID' and '\"IsWeight\":false'.";
+                }
+            };
+
+            reader.onerror = function() {
+                output.textContent = "Error reading file.";
+            };
+
+            // Read the file as text
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
