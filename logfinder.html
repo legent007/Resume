@@ -38,7 +38,7 @@
 
                 // Search for paragraphs containing 'api/RFID' and '"success":true'
                 paragraphs.forEach(paragraph => {
-                    if (paragraph.includes(':apiLaundryWorkStationAPIScanINOUT_NonRFID') && paragraph.includes('"IsWeight":false')) {
+                    if (paragraph.includes(':apiLaundryWorkStationAPIAddTrolley_Weight') && paragraph.includes('"IsWeight":false')) {
                         foundParagraphs.push(paragraph);
                     }
                 });
