@@ -3,62 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Find Paragraphs with Specific Words in Text File</title>
+    <title>Find Paragraphs with Specific Words in Multiple Text Files</title>
 </head>
 <body>
-    <h2>Find Paragraphs Containing Specific Words</h2>
+    <h2>Find Paragraphs Containing Specific Words in Multiple Files</h2>
+
+    <!-- File input -->
+    <input type="file" id="fileInput" multiple accept=".txt" />
     
-    <input type="file" id="fileInput" accept=".txt" />
-    <button onclick="findParagraphsInFile()">Find Paragraphs</button>
+    <!-- Search terms container -->
+    <div id="searchTermsContainer">
+        <label for="searchWord1">Enter search term 1:</label>
+        <input type="text" class="searchWord" id="searchWord1" value='' placeholder="Enter search term" />
+    </div>
     
+    <!-- Button to add more search fields -->
+    <button type="button" id="addButton">+ Add another search term</button>
+    
+    <button onclick="findParagraphsInFiles()">Find Paragraphs</button>
+    
+    <!-- Output section -->
     <pre id="output"></pre>
 
     <script>
-        function findParagraphsInFile() {
+        let searchTermCount = 1; // Track number of search terms
+
+        // Function to add a new search term input field
+        function addSearchTerm() {
+            searchTermCount++;
+            const searchTermsContainer = document.getElementById('searchTermsContainer');
+            
+            const newSearchField = document.createElement('div');
+            newSearchField.innerHTML = `
+                <label for="searchWord${searchTermCount}">Enter search term ${searchTermCount}:</label>
+                <input type="text" class="searchWord" id="searchWord${searchTermCount}" placeholder="Enter search term" />
+            `;
+            
+            searchTermsContainer.appendChild(newSearchField);
+        }
+
+        // Attach event listener to the button for adding new search fields
+        document.getElementById('addButton').addEventListener('click', addSearchTerm);
+
+        function findParagraphsInFiles() {
             const fileInput = document.getElementById('fileInput');
             const output = document.getElementById('output');
-            const file = fileInput.files[0];
+            const files = fileInput.files;
 
-            if (!file) {
-                output.textContent = "Please select a text file.";
+            // Get all search terms from dynamically created inputs
+            const searchTerms = Array.from(document.querySelectorAll('.searchWord')).map(input => input.value);
+
+            if (!files.length) {
+                output.textContent = "Please select one or more text files.";
                 return;
             }
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                
-                // Split the content into paragraphs based on pattern
-                const paragraphs = text.split(/(?=Request Url :)/g);
+            output.textContent = ''; // Clear previous output
+            let processedFiles = 0;
 
-                // Clear previous output
-                output.textContent = '';
+            // Loop through all selected files
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
 
-                let foundParagraphs = [];
+                reader.onload = function(e) {
+                    const text = e.target.result;
+                    
+                    // Split the content into paragraphs based on pattern
+                    const paragraphs = text.split(/(?=Request Url :)/g);
 
-                // Search for paragraphs containing 'api/RFID' and '"success":true'
-                paragraphs.forEach(paragraph => {
-                    if (paragraph.includes(':apiLaundryWorkStationAPIAddTrolley_Weight') && paragraph.includes('"IsWeight":false')) {
-                        foundParagraphs.push(paragraph);
-                    }
-                });
+                    output.textContent += `\n--- Results for file: ${file.name} ---\n`;
 
-                // Display results
-                if (foundParagraphs.length > 0) {
-                    foundParagraphs.forEach((paragraph, index) => {
-                        output.textContent += `--- Matching Paragraph ${index + 1} ---\n${paragraph}\n\n`;
+                    let foundParagraphs = [];
+                    let occurrences = 0; // Counter for occurrences of all search terms
+
+                    // Search for paragraphs containing all search terms
+                    paragraphs.forEach(paragraph => {
+                        const allTermsFound = searchTerms.every(term => paragraph.includes(term)); // Check if all terms are found
+                        
+                        if (allTermsFound) {
+                            foundParagraphs.push(paragraph);
+                            occurrences++; // Increment the counter if all terms are found
+                        }
                     });
-                } else {
-                    output.textContent = "No paragraph contains both ':apiLaundryWorkStationAPIScanINOUT_NonRFID' and '\"auto_trolley_no\":V7ZXY59U'.";
-                }
-            };
 
-            reader.onerror = function() {
-                output.textContent = "Error reading file.";
-            };
+                    // Display results for the current file
+                    if (foundParagraphs.length > 0) {
+                        foundParagraphs.forEach((paragraph, index) => {
+                            output.textContent += `--- Matching Paragraph ${index + 1} ---\n${paragraph}\n\n`;
+                        });
+                        output.textContent += `Total occurrences: ${occurrences}\n`; // Show total occurrences
+                    } else {
+                        output.textContent += `No paragraph contains all search terms.\n`;
+                    }
 
-            // Read the file as text
-            reader.readAsText(file);
+                    processedFiles++;
+                    // Show a message when all files have been processed
+                    if (processedFiles === files.length) {
+                        output.textContent += `\nProcessed ${files.length} file(s).`;
+                    }
+                };
+
+                reader.onerror = function() {
+                    output.textContent += `Error reading file: ${file.name}\n`;
+                    processedFiles++;
+                };
+
+                reader.readAsText(file); // Read the file as text
+            }
         }
     </script>
 </body>
