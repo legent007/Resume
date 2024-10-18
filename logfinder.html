@@ -3,10 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Find Paragraphs with Specific Words in Multiple Text Files</title>
+    <title>Find and Highlight Words in Multiple Text Files</title>
+    <style>
+        .highlight {
+            background-color: yellow;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <h2>Find Paragraphs Containing Specific Words in Multiple Files</h2>
+    <h2>Find and Highlight Words in Multiple Files</h2>
 
     <!-- File input -->
     <input type="file" id="fileInput" multiple accept=".txt" />
@@ -14,13 +20,13 @@
     <!-- Search terms container -->
     <div id="searchTermsContainer">
         <label for="searchWord1">Enter search term 1:</label>
-        <input type="text" class="searchWord" id="searchWord1" value='' placeholder="Enter search term" />
+        <input type="text" class="searchWord" id="searchWord1" placeholder="Enter search term" />
     </div>
     
     <!-- Button to add more search fields -->
     <button type="button" id="addButton">+ Add another search term</button>
     
-    <button onclick="findParagraphsInFiles()">Find Paragraphs</button>
+    <button onclick="findParagraphsInFiles()">Find and Highlight</button>
     
     <!-- Output section -->
     <pre id="output"></pre>
@@ -72,7 +78,7 @@
                     // Split the content into paragraphs based on pattern
                     const paragraphs = text.split(/(?=Request Url :)/g);
 
-                    output.textContent += `\n--- Results for file: ${file.name} ---\n`;
+                    output.innerHTML += `<br>--- Results for file: ${file.name} ---<br>`;
 
                     let foundParagraphs = [];
                     let occurrences = 0; // Counter for occurrences of all search terms
@@ -82,7 +88,14 @@
                         const allTermsFound = searchTerms.every(term => paragraph.includes(term)); // Check if all terms are found
                         
                         if (allTermsFound) {
-                            foundParagraphs.push(paragraph);
+                            // Highlight search terms within the paragraph
+                            let highlightedParagraph = paragraph;
+                            searchTerms.forEach(term => {
+                                const regex = new RegExp(`(${term})`, 'gi');
+                                highlightedParagraph = highlightedParagraph.replace(regex, '<span class="highlight">$1</span>');
+                            });
+
+                            foundParagraphs.push(highlightedParagraph);
                             occurrences++; // Increment the counter if all terms are found
                         }
                     });
@@ -90,17 +103,17 @@
                     // Display results for the current file
                     if (foundParagraphs.length > 0) {
                         foundParagraphs.forEach((paragraph, index) => {
-                            output.textContent += `--- Matching Paragraph ${index + 1} ---\n${paragraph}\n\n`;
+                            output.innerHTML += `--- Matching Paragraph ${index + 1} ---<br>${paragraph}<br><br>`;
                         });
-                        output.textContent += `Total occurrences: ${occurrences}\n`; // Show total occurrences
+                        output.innerHTML += `Total occurrences: ${occurrences}<br>`; // Show total occurrences
                     } else {
-                        output.textContent += `No paragraph contains all search terms.\n`;
+                        output.innerHTML += `No paragraph contains all search terms.<br>`;
                     }
 
                     processedFiles++;
                     // Show a message when all files have been processed
                     if (processedFiles === files.length) {
-                        output.textContent += `\nProcessed ${files.length} file(s).`;
+                        output.innerHTML += `<br>Processed ${files.length} file(s).`;
                     }
                 };
 
